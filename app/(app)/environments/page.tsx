@@ -1,12 +1,14 @@
 import Link from 'next/link';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { Suspense } from 'react';
+import { CheckCircle2, Pencil, Plus, XCircle } from 'lucide-react';
+import { EnvironmentModal } from '@/components/environment-modal';
 import { Card, Notice, PageHeader } from '@/components/ui';
 import { StatusBadge } from '@/components/status-badge';
 import { formatPercent, formatRelative, passRate } from '@/lib/format';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
 import type { Environment, Execution } from '@/lib/types';
-import { checkHealth, deleteEnvironment, saveEnvironment } from './actions';
+import { checkHealth } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,10 +41,15 @@ export default async function EnvironmentsPage({ searchParams }: { searchParams:
       <PageHeader
         title="Environments"
         description="Targets from tests/fixtures/environments.ts. The workflow picks the server from the key; URLs here are for health checks and links."
+        actions={
+          <Link href="/environments?environment=new" scroll={false} className="btn btn-primary">
+            <Plus size={16} aria-hidden /> Add environment
+          </Link>
+        }
       />
       {error && <Notice tone="error">{error}</Notice>}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {environments.map((env) => {
           const runs = runsByEnv.get(env.key) ?? [];
           const agg = runs.reduce((a, r) => ({ p: a.p + r.passed, x: a.x + r.passed + r.failed + r.flaky }), { p: 0, x: 0 });
@@ -125,69 +132,22 @@ export default async function EnvironmentsPage({ searchParams }: { searchParams:
                   <Link className="btn text-xs" href={`/environments?run=1&runEnv=${env.key}`} scroll={false}>
                     Run tests
                   </Link>
+                  <Link className="btn text-xs" href={`/environments?environment=${env.id}`} scroll={false}>
+                    <Pencil size={13} aria-hidden /> Edit
+                  </Link>
                 </div>
                 {env.is_production && (
                   <p className="mt-2 text-xs text-muted">The production WAF may answer 403 to Vercel&apos;s IPs; that is not an outage by itself.</p>
                 )}
-
-                <details className="mt-3 border-t border-line pt-2">
-                  <summary className="cursor-pointer text-xs text-ink-2">Edit</summary>
-                  <EnvironmentForm env={env} />
-                  <form action={deleteEnvironment} className="mt-2">
-                    <input type="hidden" name="id" value={env.id} />
-                    <button className="btn btn-danger text-xs" type="submit">
-                      Delete environment
-                    </button>
-                  </form>
-                </details>
               </div>
             </Card>
           );
         })}
       </div>
 
-      <Card title="Add environment">
-        <div className="p-4">
-          <EnvironmentForm />
-          <p className="mt-2 text-xs text-muted">
-            To dispatch runs to a new key, add it to manual-playwright.yml, tests/fixtures/environments.ts and lib/constants.ts too.
-          </p>
-        </div>
-      </Card>
+      <Suspense fallback={null}>
+        <EnvironmentModal environments={environments} />
+      </Suspense>
     </>
-  );
-}
-
-function EnvironmentForm({ env }: { env?: Environment }) {
-  const p = env?.id ?? 'new';
-  return (
-    <form action={saveEnvironment} className="mt-2 grid gap-2 text-sm md:grid-cols-2">
-      {env && <input type="hidden" name="id" value={env.id} />}
-      <Field id={`${p}-key`} name="key" label="Key" defaultValue={env?.key} required />
-      <Field id={`${p}-name`} name="name" label="Name" defaultValue={env?.name} required />
-      <Field id={`${p}-base`} name="base_url" label="Storefront URL" defaultValue={env?.base_url} />
-      <Field id={`${p}-api`} name="api_url" label="API URL" defaultValue={env?.api_url} />
-      <Field id={`${p}-admin`} name="admin_url" label="Admin URL" defaultValue={env?.admin_url} />
-      <Field id={`${p}-desc`} name="description" label="Description" defaultValue={env?.description} />
-      <label className="flex items-center gap-2 text-sm">
-        <input type="checkbox" name="is_production" defaultChecked={env?.is_production} /> Production
-      </label>
-      <div>
-        <button className="btn btn-primary" type="submit">
-          {env ? 'Save' : 'Add environment'}
-        </button>
-      </div>
-    </form>
-  );
-}
-
-function Field({ id, name, label, defaultValue, required }: { id: string; name: string; label: string; defaultValue?: string | null; required?: boolean }) {
-  return (
-    <div>
-      <label className="label" htmlFor={id}>
-        {label}
-      </label>
-      <input id={id} name={name} defaultValue={defaultValue ?? ''} required={required} className="input w-full" />
-    </div>
   );
 }
