@@ -22,6 +22,16 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   return `${dateTime.format(new Date(value))} KST`;
 }
 
+const dateOnly = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', year: 'numeric', month: 'short', day: '2-digit' });
+const timeOnly = new Intl.DateTimeFormat('en-GB', { timeZone: 'Asia/Seoul', hour: '2-digit', minute: '2-digit', hour12: false });
+
+// "02 Nov 2026" and "08:19 KST", for tables that show date and time on separate lines.
+export function formatDateParts(value: string | Date | null | undefined): { date: string; time: string } | null {
+  if (!value) return null;
+  const d = new Date(value);
+  return { date: dateOnly.format(d), time: `${timeOnly.format(d)} KST` };
+}
+
 export function formatRelative(value: string | Date | null | undefined): string {
   if (!value) return '—';
   const diff = Date.now() - new Date(value).getTime();

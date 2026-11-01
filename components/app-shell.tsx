@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Suspense, useEffect, useRef, useState } from 'react';
 import {
   BarChart3,
   Bell,
@@ -29,6 +29,7 @@ import {
 import { FOLDED_COOKIE, NAV_COOKIE } from '@/lib/constants';
 import type { Project } from '@/lib/types';
 import { selectProject, signOut } from '@/app/(app)/actions';
+import { RunModal, type RunTarget } from './run-modal';
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
 type NavGroup = { title: string; icon: typeof LayoutDashboard; items: NavItem[] };
@@ -134,6 +135,7 @@ export function AppShell({
   recentFailures,
   initialCollapsed,
   initialFolded,
+  runTarget,
   children
 }: {
   projects: Project[];
@@ -142,9 +144,11 @@ export function AppShell({
   recentFailures: number;
   initialCollapsed: boolean;
   initialFolded: string[];
+  runTarget: RunTarget;
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [panelOpen, setPanelOpen] = useState(!initialCollapsed);
   const [folded, setFolded] = useState<Set<string>>(() => new Set(initialFolded));
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -330,9 +334,20 @@ export function AppShell({
           </form>
           <div className="ml-auto flex items-center gap-1.5">
             <ThemeToggle />
-            <Link href="/executions?run=1" className="icon-btn" aria-label="Run tests" title="Run tests">
+            {/* Opens the Run tests modal over the current page. */}
+            <button
+              type="button"
+              className="icon-btn"
+              aria-label="Run tests"
+              title="Run tests"
+              onClick={() => {
+                const params = new URLSearchParams(window.location.search);
+                params.set('run', '1');
+                router.push(`${window.location.pathname}?${params}`, { scroll: false });
+              }}
+            >
               <Play size={20} />
-            </Link>
+            </button>
             <Link
               href="/executions?status=failed"
               className="icon-btn relative"
@@ -377,6 +392,11 @@ export function AppShell({
       <Link href="/settings" className="fab no-print" aria-label="Settings" title="Settings">
         <Settings size={26} />
       </Link>
+
+      {/* useSearchParams needs a Suspense boundary. */}
+      <Suspense fallback={null}>
+        <RunModal target={runTarget} />
+      </Suspense>
     </div>
   );
 }

@@ -1,19 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useFormStatus } from 'react-dom';
 import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES } from '@/lib/constants';
 
-function Submit({ label }: { label: string }) {
-  const { pending } = useFormStatus();
-  return (
-    <button className="btn btn-primary" type="submit" disabled={pending}>
-      {pending ? 'Dispatching…' : label}
-    </button>
-  );
-}
-
-// Shared by "Run tests" and the schedule editor. Values map 1:1 to manual-playwright.yml inputs.
+// Shared by the Run tests modal and the schedule editor. Values map 1:1 to manual-playwright.yml inputs.
 export function RunFields({
   defaults,
   idPrefix = ''
@@ -77,21 +67,10 @@ export function RunFields({
         />
       </div>
       {environment === 'production' && (
-        <p className="text-xs text-warning-text md:col-span-full">
+        <p className="col-span-full text-xs text-warning-text">
           Production: the workflow excludes @payment, @slow and @destructive, and destructive specs refuse production regardless.
         </p>
       )}
     </>
-  );
-}
-
-export function RunForm({ action, defaults }: { action: (fd: FormData) => Promise<void>; defaults: Parameters<typeof RunFields>[0]['defaults'] }) {
-  return (
-    <form action={action} className="grid items-end gap-3 p-4 md:grid-cols-5">
-      <RunFields defaults={defaults} />
-      <div>
-        <Submit label="Dispatch run" />
-      </div>
-    </form>
   );
 }

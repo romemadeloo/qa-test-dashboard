@@ -478,6 +478,18 @@ select.input {
   animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+@keyframes modal-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+}
+.modal-backdrop {
+  animation: fade-in 0.2s ease both;
+}
+.modal-panel.card {
+  animation: modal-in 0.26s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
 @keyframes drawer-in {
   from {
     transform: translateX(-100%);

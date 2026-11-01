@@ -1,13 +1,15 @@
 import Link from 'next/link';
+import { Suspense } from 'react';
+import { CalendarPlus, Pencil } from 'lucide-react';
 import { Card, EmptyState, Notice, PageHeader } from '@/components/ui';
-import { ScheduleForm } from '@/components/schedule-form';
+import { ScheduleModal } from '@/components/schedule-form';
 import { StatusBadge } from '@/components/status-badge';
 import { nextRuns } from '@/lib/cron';
 import { formatDateTime, formatRelative } from '@/lib/format';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
 import type { Execution, Schedule, Settings } from '@/lib/types';
-import { deleteSchedule, runScheduleNow, saveSchedule, toggleSchedule } from './actions';
+import { deleteSchedule, runScheduleNow, toggleSchedule } from './actions';
 
 export const dynamic = 'force-dynamic';
 
@@ -32,7 +34,12 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
     <>
       <PageHeader
         title="Scheduler"
-        description="Recurring Playwright runs. A Vercel cron checks every 15 minutes and dispatches due schedules to GitHub Actions."
+        description="Recurring Playwright runs, dispatched to GitHub Actions when they are due."
+        actions={
+          <Link href="/scheduler?schedule=new" scroll={false} className="btn btn-primary">
+            <CalendarPlus size={16} aria-hidden /> Create schedule
+          </Link>
+        }
       />
       {error && <Notice tone="error">{error}</Notice>}
       {saved && <Notice tone="success">Schedule saved.</Notice>}
@@ -42,10 +49,14 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
         </Notice>
       )}
 
-      <div className="mb-6 space-y-3">
+      <div className="space-y-3">
         {schedules.length === 0 && (
           <Card>
-            <EmptyState title="No schedules yet" />
+            <EmptyState title="No schedules yet">
+              <Link href="/scheduler?schedule=new" scroll={false} className="font-bold text-accent">
+                Create your first schedule
+              </Link>
+            </EmptyState>
           </Card>
         )}
         {schedules.map((s) => {
@@ -53,10 +64,10 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
           const last = s.last_execution_id ? lastById.get(s.last_execution_id) : undefined;
           return (
             <Card key={s.id}>
-              <div className="flex flex-wrap items-start justify-between gap-4 p-4">
+              <div className="flex flex-wrap items-start justify-between gap-4 p-5">
                 <div className="min-w-0">
                   <div className="flex items-center gap-2">
-                    <h2 className="font-semibold">{s.name}</h2>
+                    <h2 className="font-bold">{s.name}</h2>
                     {!s.enabled && <StatusBadge status="cancelled" />}
                   </div>
                   <div className="mt-1 text-sm text-ink-2">
@@ -80,6 +91,9 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
                   </div>
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  <Link href={`/scheduler?schedule=${s.id}`} scroll={false} className="btn">
+                    <Pencil size={14} aria-hidden /> Edit
+                  </Link>
                   <form action={runScheduleNow}>
                     <input type="hidden" name="id" value={s.id} />
                     <button className="btn" type="submit" disabled={!configured}>
@@ -101,18 +115,14 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
                   </form>
                 </div>
               </div>
-              <details className="border-t border-line">
-                <summary className="cursor-pointer px-4 py-2 text-xs text-ink-2">Edit</summary>
-                <ScheduleForm action={saveSchedule} schedule={s} />
-              </details>
             </Card>
           );
         })}
       </div>
 
-      <Card title="New schedule">
-        <ScheduleForm action={saveSchedule} />
-      </Card>
+      <Suspense fallback={null}>
+        <ScheduleModal schedules={schedules} />
+      </Suspense>
     </>
   );
 }

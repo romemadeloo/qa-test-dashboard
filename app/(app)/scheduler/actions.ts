@@ -13,7 +13,11 @@ function fail(message: string): never {
   redirect(`/scheduler?error=${encodeURIComponent(message)}`);
 }
 
-export async function saveSchedule(formData: FormData) {
+export type SaveScheduleState = { error?: string };
+
+// Used with useActionState by the schedule modal: problems come back as state and show in the
+// modal; success closes it by navigating back to the list.
+export async function saveSchedule(_prev: SaveScheduleState, formData: FormData): Promise<SaveScheduleState> {
   const { project } = await getCurrentProject();
   const id = String(formData.get('id') ?? '');
   const name = String(formData.get('name') ?? '').trim();
@@ -24,13 +28,13 @@ export async function saveSchedule(formData: FormData) {
   const browser = String(formData.get('browser_project') ?? '');
   const customGrep = String(formData.get('custom_grep') ?? '').trim() || null;
 
-  if (!name) fail('Give the schedule a name.');
+  if (!name) return { error: 'Give the schedule a name.' };
   const cronError = validateCron(cron, timezone);
-  if (cronError) fail(`Invalid cron or timezone: ${cronError}`);
-  if (!(ENVIRONMENT_KEYS as readonly string[]).includes(environment)) fail('Unknown environment.');
-  if (!(SUITES as readonly string[]).includes(suite)) fail('Unknown suite.');
-  if (!(BROWSER_PROJECTS as readonly string[]).includes(browser)) fail('Unknown browser project.');
-  if (suite === 'custom-grep' && !customGrep) fail('A custom grep is required when the suite is custom-grep.');
+  if (cronError) return { error: `Invalid cron or timezone: ${cronError}` };
+  if (!(ENVIRONMENT_KEYS as readonly string[]).includes(environment)) return { error: 'Unknown environment.' };
+  if (!(SUITES as readonly string[]).includes(suite)) return { error: 'Unknown suite.' };
+  if (!(BROWSER_PROJECTS as readonly string[]).includes(browser)) return { error: 'Unknown browser project.' };
+  if (suite === 'custom-grep' && !customGrep) return { error: 'A custom grep is required when the suite is custom-grep.' };
 
   const row = {
     project_id: project.id,
@@ -50,7 +54,7 @@ export async function saveSchedule(formData: FormData) {
   const { error } = id
     ? await supabase.from('schedules').update({ ...row, last_run_at: new Date().toISOString() }).eq('id', id)
     : await supabase.from('schedules').insert(row);
-  if (error) fail(error.message);
+  if (error) return { error: error.message };
 
   revalidatePath('/scheduler');
   redirect('/scheduler?saved=1');

@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import { StatusBadge } from './status-badge';
 import { ResultBar, TableWrap } from './ui';
-import { formatDuration, formatRelative } from '@/lib/format';
+import { formatDateParts, formatDuration, formatRelative } from '@/lib/format';
 import type { Execution } from '@/lib/types';
 
 export function ExecutionsTable({ executions, compact = false }: { executions: Execution[]; compact?: boolean }) {
@@ -18,7 +18,7 @@ export function ExecutionsTable({ executions, compact = false }: { executions: E
             <th className="w-40">Results</th>
             <th className="num">Tests</th>
             <th className="num">Duration</th>
-            <th className="num">Started</th>
+            <th className="num">Executed</th>
           </tr>
         </thead>
         <tbody>
@@ -45,13 +45,24 @@ export function ExecutionsTable({ executions, compact = false }: { executions: E
                 {e.total}
               </td>
               <td className="num">{formatDuration(e.duration_ms)}</td>
-              <td className="num text-ink-2" title={e.started_at ?? e.created_at}>
-                {formatRelative(e.started_at ?? e.created_at)}
-              </td>
+              <ExecutedAt value={e.started_at ?? e.created_at} />
             </tr>
           ))}
         </tbody>
       </table>
     </TableWrap>
+  );
+}
+
+// Date and time (KST) of the run, with how long ago underneath.
+function ExecutedAt({ value }: { value: string }) {
+  const parts = formatDateParts(value);
+  return (
+    <td className="num whitespace-nowrap" title={formatRelative(value)}>
+      <div className="font-semibold text-ink">{parts?.date ?? '—'}</div>
+      <div className="text-xs text-[var(--muted)]">
+        {parts?.time} · {formatRelative(value)}
+      </div>
+    </td>
   );
 }

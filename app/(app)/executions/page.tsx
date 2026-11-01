@@ -1,12 +1,11 @@
 import Link from 'next/link';
+import { Play } from 'lucide-react';
 import { Card, EmptyState, Notice, PageHeader } from '@/components/ui';
 import { ExecutionsTable } from '@/components/executions-table';
-import { RunForm } from '@/components/run-form';
 import { ENVIRONMENT_KEYS } from '@/lib/constants';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
-import type { Execution, Settings } from '@/lib/types';
-import { startRun } from './actions';
+import type { Execution } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +18,7 @@ export default async function ExecutionsPage({
 }: {
   searchParams: Promise<{ env?: string; status?: string; trigger?: string; run?: string; error?: string; page?: string }>
 }) {
-  const { env = '', status = '', trigger = '', run, error, page = '1' } = await searchParams;
+  const { env = '', status = '', trigger = '', error, page = '1' } = await searchParams;
   const pageNo = Math.max(1, Number(page) || 1);
   const { project } = await getCurrentProject();
   const supabase = await createClient();
@@ -29,14 +28,12 @@ export default async function ExecutionsPage({
   if (STATUSES.includes(status)) query = query.eq('status', status);
   if (TRIGGERS.includes(trigger)) query = query.eq('trigger', trigger);
 
-  const [{ data, count }, settingsRes] = await Promise.all([
-    query.order('created_at', { ascending: false }).range((pageNo - 1) * PAGE_SIZE, pageNo * PAGE_SIZE - 1),
-    supabase.from('settings').select('*').eq('project_id', project.id).maybeSingle<Settings>()
-  ]);
+  const { data, count } = await query.order('created_at', { ascending: false }).range((pageNo - 1) * PAGE_SIZE, pageNo * PAGE_SIZE - 1);
   const executions = (data ?? []) as Execution[];
-  const settings = settingsRes.data;
   const pages = Math.max(1, Math.ceil((count ?? 0) / PAGE_SIZE));
   const href = (n: number) => `/executions?${new URLSearchParams({ env, status, trigger, page: String(n) })}`;
+  // Opens the Run tests modal (app-shell) without losing the current filters.
+  const runHref = `/executions?${new URLSearchParams({ ...Object.fromEntries(Object.entries({ env, status, trigger }).filter(([, v]) => v)), run: '1' })}`;
 
   return (
     <>
@@ -44,30 +41,13 @@ export default async function ExecutionsPage({
         title="Executions"
         description="Every Playwright run reported by CI, the scheduler, or a local run with the dashboard reporter."
         actions={
-          <Link href={run ? '/executions' : '/executions?run=1'} className="btn btn-primary">
-            {run ? 'Close' : 'Run tests'}
+          <Link href={runHref} scroll={false} className="btn btn-primary">
+            <Play size={15} aria-hidden /> Run tests
           </Link>
         }
       />
 
       {error && <Notice tone="error">{error}</Notice>}
-      {run && (
-        <Card title="Run tests on GitHub Actions" className="mb-6">
-          {!settings?.github_owner || !settings.github_repo ? (
-            <p className="px-4 pt-3 text-sm text-warning-text">
-              GitHub is not configured — set the owner and repository in <Link className="underline" href="/settings">Settings</Link>.
-            </p>
-          ) : (
-            <p className="px-4 pt-3 text-xs text-muted">
-              Dispatches {settings.github_workflow} on {settings.github_owner}/{settings.github_repo}@{settings.github_ref}.
-            </p>
-          )}
-          <RunForm
-            action={startRun}
-            defaults={{ environment: settings?.default_environment, browser_project: settings?.default_browser }}
-          />
-        </Card>
-      )}
 
       <form className="no-print mb-4 flex flex-wrap items-end gap-3">
         <select name="env" defaultValue={env} className="input" aria-label="Environment">

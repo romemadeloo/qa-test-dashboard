@@ -13,7 +13,11 @@ function pick<T extends readonly string[]>(allowed: T, value: FormDataEntryValue
   return v as T[number];
 }
 
-export async function startRun(formData: FormData) {
+export type StartRunState = { error?: string };
+
+// Used with useActionState by the Run tests modal: a refusal comes back as state and is shown in
+// the modal; success navigates to the new execution.
+export async function startRun(_prev: StartRunState, formData: FormData): Promise<StartRunState> {
   const { project } = await getCurrentProject();
   const supabase = await createClient();
   let executionId: string;
@@ -28,7 +32,7 @@ export async function startRun(formData: FormData) {
       trigger: 'manual'
     });
   } catch (error) {
-    redirect(`/executions?run=1&error=${encodeURIComponent(error instanceof Error ? error.message : String(error))}`);
+    return { error: error instanceof Error ? error.message : String(error) };
   }
 
   revalidatePath('/executions');

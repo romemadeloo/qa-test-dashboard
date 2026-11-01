@@ -122,7 +122,7 @@ export default async function EnvironmentsPage({ searchParams }: { searchParams:
                   <Link className="btn text-xs" href={`/executions?env=${env.key}`}>
                     Runs
                   </Link>
-                  <Link className="btn text-xs" href="/executions?run=1">
+                  <Link className="btn text-xs" href={`/environments?run=1&runEnv=${env.key}`} scroll={false}>
                     Run tests
                   </Link>
                 </div>
