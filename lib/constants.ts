@@ -2,7 +2,11 @@
 // value the workflow does not list, so keep these in step with it.
 export const ENVIRONMENT_KEYS = ['production', 'qa', 'dev-1', 'dev-2', 'dev-3', 'dev-4', 'dev-5', 'dev-6'] as const;
 
-export const SUITES = ['smoke', 'api', 'auth', 'regression', 'purchasing', 'validation', 'a11y', 'custom-grep'] as const;
+export const SUITES = ['smoke', 'full', 'api', 'auth', 'regression', 'admin', 'purchasing', 'validation', 'a11y', 'custom-grep'] as const;
+
+// manual-playwright.yml passes these to --grep-invert for every suite but api, custom-grep included,
+// so a custom-grep run on them alone selects nothing.
+export const WORKFLOW_EXCLUDED_TAGS = ['@payment', '@slow', '@destructive'] as const;
 
 export const BROWSER_PROJECTS = [
   'chromium-desktop',

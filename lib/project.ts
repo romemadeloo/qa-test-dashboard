@@ -22,3 +22,13 @@ export async function getCurrentProject(): Promise<{ project: Project; projects:
   const project = projects.find((p) => p.id === selected) ?? projects[0];
   return { project, projects };
 }
+
+// Tags the reporter has synced for this project's suites (describe-level, per docs/CONVENTIONS.md),
+// offered as checkboxes for a custom-grep run.
+export async function getAvailableTags(projectId: string): Promise<string[]> {
+  if (!projectId) return [];
+  const supabase = await createClient();
+  const { data } = await supabase.from('test_suites').select('tags').eq('project_id', projectId);
+  const tags = new Set(((data ?? []) as { tags: string[] }[]).flatMap((s) => s.tags));
+  return [...tags].sort();
+}

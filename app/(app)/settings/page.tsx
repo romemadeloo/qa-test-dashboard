@@ -2,6 +2,7 @@ import { CheckCircle2, CircleDashed } from 'lucide-react';
 import { Card, Notice, PageHeader } from '@/components/ui';
 import { BROWSER_PROJECTS, ENVIRONMENT_KEYS } from '@/lib/constants';
 import { getCurrentProject } from '@/lib/project';
+import { requireSuperadminPage } from '@/lib/viewer';
 import { createClient } from '@/lib/supabase/server';
 import type { Settings } from '@/lib/types';
 import { saveSettings } from './actions';
@@ -9,6 +10,7 @@ import { saveSettings } from './actions';
 export const dynamic = 'force-dynamic';
 
 export default async function SettingsPage({ searchParams }: { searchParams: Promise<{ error?: string; saved?: string }> }) {
+  await requireSuperadminPage();
   const { error, saved } = await searchParams;
   const { project } = await getCurrentProject();
   const supabase = await createClient();

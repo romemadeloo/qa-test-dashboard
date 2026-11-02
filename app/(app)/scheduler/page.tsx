@@ -6,7 +6,8 @@ import { ScheduleModal } from '@/components/schedule-form';
 import { StatusBadge } from '@/components/status-badge';
 import { nextRuns } from '@/lib/cron';
 import { formatDateTime, formatRelative } from '@/lib/format';
-import { getCurrentProject } from '@/lib/project';
+import { getAvailableTags, getCurrentProject } from '@/lib/project';
+import { getViewer } from '@/lib/viewer';
 import { createClient } from '@/lib/supabase/server';
 import type { Execution, Schedule, Settings } from '@/lib/types';
 import { deleteSchedule, runScheduleNow, toggleSchedule } from './actions';
@@ -18,9 +19,11 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
   const { project } = await getCurrentProject();
   const supabase = await createClient();
 
-  const [schedulesRes, settingsRes] = await Promise.all([
+  const [schedulesRes, settingsRes, tags, { profile }] = await Promise.all([
     supabase.from('schedules').select('*').eq('project_id', project.id).order('name'),
-    supabase.from('settings').select('*').eq('project_id', project.id).maybeSingle<Settings>()
+    supabase.from('settings').select('*').eq('project_id', project.id).maybeSingle<Settings>(),
+    getAvailableTags(project.id),
+    getViewer()
   ]);
   const schedules = (schedulesRes.data ?? []) as Schedule[];
   const lastIds = schedules.map((s) => s.last_execution_id).filter(Boolean) as string[];
@@ -45,7 +48,14 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
       {saved && <Notice tone="success">Schedule saved.</Notice>}
       {!configured && (
         <Notice>
-          GitHub dispatch is not configured, so schedules cannot start runs yet. Set it up in <Link href="/settings" className="underline">Settings</Link>.
+          GitHub dispatch is not configured, so schedules cannot start runs yet.{' '}
+          {profile?.is_superadmin ? (
+            <>
+              Set it up in <Link href="/settings" className="underline">Settings</Link>.
+            </>
+          ) : (
+            'Ask a super admin to set it up in Settings.'
+          )}
         </Notice>
       )}
 
@@ -121,7 +131,7 @@ export default async function SchedulerPage({ searchParams }: { searchParams: Pr
       </div>
 
       <Suspense fallback={null}>
-        <ScheduleModal schedules={schedules} />
+        <ScheduleModal schedules={schedules} tags={tags} />
       </Suspense>
     </>
   );

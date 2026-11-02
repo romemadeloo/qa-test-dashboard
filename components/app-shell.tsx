@@ -64,11 +64,7 @@ const groups: NavGroup[] = [
       { href: '/environments', label: 'Environments', icon: Server }
     ]
   },
-  {
-    title: 'System',
-    icon: Settings,
-    items: [{ href: '/settings', label: 'Settings', icon: Settings }]
-  }
+  // System pages (Users, Settings) are added for super admins only; see navGroups.
 ];
 
 function writeCookie(name: string, value: string) {
@@ -151,9 +147,19 @@ export function AppShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
-  // Users is listed only for super admins; the page itself also checks.
+  // Users and Settings are listed only for super admins; the pages themselves also check.
   const navGroups = viewer.isSuperadmin
-    ? groups.map((g) => (g.title === 'System' ? { ...g, items: [{ href: '/users', label: 'Users', icon: UsersRound }, ...g.items] } : g))
+    ? [
+        ...groups,
+        {
+          title: 'System',
+          icon: Settings,
+          items: [
+            { href: '/users', label: 'Users', icon: UsersRound },
+            { href: '/settings', label: 'Settings', icon: Settings }
+          ]
+        }
+      ]
     : groups;
 
   useEffect(() => setDrawerOpen(false), [pathname]);

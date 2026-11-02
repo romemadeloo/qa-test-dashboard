@@ -23,8 +23,8 @@ export async function requireSuperadminPage() {
 }
 
 // Actions: refuse outright. Checked server-side before any service-role write.
-export async function assertSuperadmin() {
+export async function assertSuperadmin(what = 'manage users') {
   const viewer = await getViewer();
-  if (!viewer.user || !viewer.profile?.is_superadmin) throw new Error('Only a super admin can manage users.');
+  if (!viewer.user || !viewer.profile?.is_superadmin) throw new Error(`Only a super admin can ${what}.`);
   return viewer as { user: NonNullable<typeof viewer.user>; profile: Profile };
 }

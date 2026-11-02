@@ -1,14 +1,17 @@
 'use client';
 
 import { useState } from 'react';
-import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES } from '@/lib/constants';
+import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES, WORKFLOW_EXCLUDED_TAGS } from '@/lib/constants';
 
 // Shared by the Run tests modal and the schedule editor. Values map 1:1 to manual-playwright.yml inputs.
 export function RunFields({
   defaults,
+  tags,
   idPrefix = ''
 }: {
   defaults: { environment?: string; suite?: string; browser_project?: string; custom_grep?: string | null };
+  // Tags synced from the test catalog; custom grep picks from these.
+  tags: string[];
   idPrefix?: string;
 }) {
   const [environment, setEnvironment] = useState(defaults.environment ?? 'qa');
@@ -52,25 +55,67 @@ export function RunFields({
           ))}
         </select>
       </div>
-      <div>
-        <label className="label" htmlFor={`${idPrefix}custom_grep`}>
-          Custom grep {suite !== 'custom-grep' && <span className="text-muted">(custom-grep only)</span>}
-        </label>
-        <input
-          id={`${idPrefix}custom_grep`}
-          name="custom_grep"
-          defaultValue={defaults.custom_grep ?? ''}
-          placeholder="@cart|@validation"
-          required={suite === 'custom-grep'}
-          disabled={suite !== 'custom-grep'}
-          className="input w-full font-mono"
-        />
-      </div>
+      {suite === 'custom-grep' && <TagPicker tags={tags} initialGrep={defaults.custom_grep ?? ''} />}
       {environment === 'production' && (
         <p className="col-span-full text-xs text-warning-text">
           Production: the workflow excludes @payment, @slow and @destructive, and destructive specs refuse production regardless.
         </p>
       )}
     </>
+  );
+}
+
+const excluded: readonly string[] = WORKFLOW_EXCLUDED_TAGS;
+
+// Checked tags become the custom grep as an OR list (@cart|@validation), which is what the workflow
+// hands to --grep. Tags in a saved grep that the catalog no longer has stay listed so they are not lost.
+function TagPicker({ tags, initialGrep }: { tags: string[]; initialGrep: string }) {
+  const initial = initialGrep
+    .split('|')
+    .map((t) => t.trim())
+    .filter(Boolean);
+  const [selected, setSelected] = useState<string[]>(initial);
+  const options = [...new Set([...tags, ...initial])].sort();
+  const grep = options.filter((t) => selected.includes(t)).join('|');
+
+  function toggle(tag: string, on: boolean) {
+    setSelected((prev) => (on ? [...prev, tag] : prev.filter((t) => t !== tag)));
+  }
+
+  return (
+    <fieldset className="col-span-full">
+      <legend className="label">Tags</legend>
+      <input type="hidden" name="custom_grep" value={grep} />
+      {options.length === 0 ? (
+        <p className="text-xs text-[var(--muted)]">No tags yet. They appear after the reporter syncs the test catalog from a run.</p>
+      ) : (
+        <div className="flex flex-wrap gap-1.5">
+          {options.map((tag) => {
+            const disabled = excluded.includes(tag);
+            const checked = selected.includes(tag);
+            return (
+              <label
+                key={tag}
+                title={disabled ? 'The workflow always excludes this tag' : undefined}
+                className={`btn !px-3 !py-1.5 text-xs font-mono ${checked ? '!border-[var(--accent)] !text-accent' : ''} ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+              >
+                <input type="checkbox" className="mr-1.5" checked={checked} disabled={disabled} onChange={(e) => toggle(tag, e.target.checked)} />
+                {tag}
+              </label>
+            );
+          })}
+        </div>
+      )}
+      <p className="mt-2 text-xs text-[var(--muted)]">
+        {grep ? (
+          <>
+            Runs tests with any of: <span className="font-mono">{grep}</span>
+          </>
+        ) : (
+          'Pick at least one tag.'
+        )}{' '}
+        {excluded.join(', ')} are always excluded by the workflow.
+      </p>
+    </fieldset>
   );
 }

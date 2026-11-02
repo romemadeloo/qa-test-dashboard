@@ -24,7 +24,8 @@ deactivate or delete them. People sign in with their username (or an email, for 
 - Profiles live in `public.profiles`; Supabase Auth still holds the sign-in. Accounts created on the Users page get
   an internal email `<username>@users.qa-dashboard.internal` that never receives mail, so passwords are reset by a
   super admin, not by email.
-- Roles are labels for now: every signed-in user can use the whole dashboard; only super admins manage users.
+- Roles are labels for now: every signed-in user can use the dashboard, but only super admins manage users and
+  open **Settings** (migration `20261102100000_settings_superadmin.sql` limits changing settings to them in the database too).
 - Accounts that existed before user management became super admins (migration `20261102000000_user_profiles.sql`).
 
 ## How data gets in
@@ -48,7 +49,7 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
 ### 1. Supabase
 
 1. Create a project at supabase.com.
-2. In **SQL Editor**, run `supabase/migrations/20261030000000_init.sql`, then `supabase/seed.sql`
+2. In **SQL Editor**, run each file in `supabase/migrations/` in name order, then `supabase/seed.sql`
    (the seed adds the Musticker project, the eight environments and three disabled schedules).
    With the Supabase CLI instead: `npx supabase init`, `npx supabase link --project-ref <ref>`, `npx supabase db push`,
    then run the seed in the SQL editor.

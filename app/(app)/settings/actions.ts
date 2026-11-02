@@ -5,10 +5,12 @@ import { redirect } from 'next/navigation';
 import { BROWSER_PROJECTS, ENVIRONMENT_KEYS } from '@/lib/constants';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
+import { assertSuperadmin } from '@/lib/viewer';
 
 const name = /^[A-Za-z0-9_.-]+$/;
 
 export async function saveSettings(formData: FormData) {
+  await assertSuperadmin('change settings');
   const { project } = await getCurrentProject();
   const text = (key: string) => String(formData.get(key) ?? '').trim();
 

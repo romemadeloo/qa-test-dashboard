@@ -13,7 +13,7 @@ import { FormError, Modal, useCloseModal } from './modal';
 import { RunFields } from './run-form';
 
 // Opens with ?schedule=new (create) or ?schedule=<id> (edit) on the Scheduler page.
-export function ScheduleModal({ schedules }: { schedules: Schedule[] }) {
+export function ScheduleModal({ schedules, tags }: { schedules: Schedule[]; tags: string[] }) {
   const param = useSearchParams().get('schedule');
   const close = useCloseModal(['schedule']);
   if (!param) return null;
@@ -28,12 +28,12 @@ export function ScheduleModal({ schedules }: { schedules: Schedule[] }) {
       onClose={close}
       width={680}
     >
-      <ScheduleForm key={param} schedule={schedule} onCancel={close} />
+      <ScheduleForm key={param} schedule={schedule} tags={tags} onCancel={close} />
     </Modal>
   );
 }
 
-function ScheduleForm({ schedule, onCancel }: { schedule?: Schedule; onCancel: () => void }) {
+function ScheduleForm({ schedule, tags, onCancel }: { schedule?: Schedule; tags: string[]; onCancel: () => void }) {
   const [state, action] = useActionState<SaveScheduleState, FormData>(saveSchedule, {});
   const [cron, setCron] = useState(schedule?.cron ?? '0 2 * * *');
   const [timezone, setTimezone] = useState(schedule?.timezone ?? 'Asia/Seoul');
@@ -82,6 +82,7 @@ function ScheduleForm({ schedule, onCancel }: { schedule?: Schedule; onCancel: (
 
         <RunFields
           idPrefix="schedule-"
+          tags={tags}
           defaults={{
             environment: schedule?.environment_key,
             suite: schedule?.suite,

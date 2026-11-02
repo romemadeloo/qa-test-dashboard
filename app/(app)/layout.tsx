@@ -2,7 +2,7 @@ import { cookies } from 'next/headers';
 import { AppShell, type Viewer } from '@/components/app-shell';
 import { getViewer } from '@/lib/viewer';
 import { FOLDED_COOKIE, NAV_COOKIE, PROJECT_COOKIE } from '@/lib/constants';
-import { getProjects } from '@/lib/project';
+import { getAvailableTags, getProjects } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
 import type { RunTarget } from '@/components/run-modal';
 import type { Settings } from '@/lib/types';
@@ -24,7 +24,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     .filter(Boolean);
   const currentId = projects.find((p) => p.id === selected)?.id ?? projects[0]?.id ?? '';
 
-  const [{ count: recentFailures }, { data: settings }] = currentId
+  const [{ count: recentFailures }, { data: settings }, tags] = currentId
     ? await Promise.all([
         supabase
           .from('executions')
@@ -32,16 +32,19 @@ export default async function AppLayout({ children }: { children: React.ReactNod
           .eq('project_id', currentId)
           .in('status', ['failed', 'timedout', 'interrupted'])
           .gte('created_at', new Date(Date.now() - 86_400_000).toISOString()),
-        supabase.from('settings').select('*').eq('project_id', currentId).maybeSingle<Settings>()
+        supabase.from('settings').select('*').eq('project_id', currentId).maybeSingle<Settings>(),
+        getAvailableTags(currentId)
       ])
-    : [{ count: 0 }, { data: null }];
+    : [{ count: 0 }, { data: null }, []];
 
   // What the Run tests modal dispatches to.
   const runTarget: RunTarget = {
     repo: settings?.github_owner && settings.github_repo ? `${settings.github_owner}/${settings.github_repo}@${settings.github_ref}` : null,
     workflow: settings?.github_workflow ?? 'manual-playwright.yml',
     defaultEnvironment: settings?.default_environment ?? 'qa',
-    defaultBrowser: settings?.default_browser ?? 'chromium-desktop'
+    defaultBrowser: settings?.default_browser ?? 'chromium-desktop',
+    tags,
+    canEditSettings: viewer.isSuperadmin
   };
 
   return (

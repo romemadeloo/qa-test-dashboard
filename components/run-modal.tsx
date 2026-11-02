@@ -15,6 +15,10 @@ export type RunTarget = {
   workflow: string;
   defaultEnvironment: string;
   defaultBrowser: string;
+  // Catalog tags offered for a custom-grep run.
+  tags: string[];
+  // Settings is for super admins; others are told to ask one.
+  canEditSettings: boolean;
 };
 
 // Opens with ?run=1 on any page; ?runEnv=<key> preselects the environment.
@@ -39,16 +43,22 @@ function RunDialog({ target, environment, onClose }: { target: RunTarget; enviro
       <form action={action}>
         {!target.repo && (
           <p className="mb-4 rounded-2xl bg-[var(--warning-soft)] px-4 py-3 text-sm font-semibold text-warning-text">
-            Set the GitHub owner and repository in{' '}
-            <Link href="/settings" className="underline">
-              Settings
-            </Link>{' '}
-            first.
+            {target.canEditSettings ? (
+              <>
+                Set the GitHub owner and repository in{' '}
+                <Link href="/settings" className="underline">
+                  Settings
+                </Link>{' '}
+                first.
+              </>
+            ) : (
+              'Ask a super admin to set the GitHub owner and repository in Settings first.'
+            )}
           </p>
         )}
         <FormError message={state.error} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <RunFields idPrefix="modal-" defaults={{ environment: environment ?? target.defaultEnvironment, browser_project: target.defaultBrowser }} />
+          <RunFields idPrefix="modal-" tags={target.tags} defaults={{ environment: environment ?? target.defaultEnvironment, browser_project: target.defaultBrowser }} />
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" className="btn" onClick={onClose}>
