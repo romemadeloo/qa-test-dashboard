@@ -41,7 +41,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
             <Field id="github_workflow" label="Workflow file" defaultValue={s.github_workflow ?? 'manual-playwright.yml'} />
             <Field id="github_ref" label="Branch / ref" defaultValue={s.github_ref ?? 'production'} />
             <p className="text-xs text-muted sm:col-span-2">
-              The token (GITHUB_TOKEN env var) needs Actions: read &amp; write on this repository. The workflow must accept a
+              The token (GITHUB_TOKEN env var) needs Actions: read &amp; write on that repository. The workflow must accept a
               dashboard_run_id input.
             </p>
           </div>
@@ -108,7 +108,7 @@ export default async function SettingsPage({ searchParams }: { searchParams: Pro
         <Card title="Connect the Playwright suite">
           <div className="space-y-3 p-4 text-sm">
             <p className="text-ink-2">
-              tests/reporters/dashboard-reporter.ts is already in playwright.config.ts and does nothing until these are set
+              In the Playwright repo, tests/reporters/dashboard-reporter.ts is registered in playwright.config.ts and does nothing until these are set
               (locally in .env, on CI as Actions secrets):
             </p>
             <pre className="overflow-x-auto rounded bg-[var(--surface-2)] p-3 font-mono text-xs">{`DASHBOARD_URL=${site}

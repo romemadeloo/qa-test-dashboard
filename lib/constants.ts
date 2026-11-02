@@ -1,5 +1,5 @@
-// Mirrors the workflow_dispatch inputs of .github/workflows/manual-playwright.yml. GitHub rejects a
-// value the workflow does not list, so keep these in step with it.
+// Mirrors the workflow_dispatch inputs of .github/workflows/manual-playwright.yml in the test repo
+// (romemadeloo/musticker-e2e). GitHub rejects a value the workflow does not list, so keep these in step with it.
 export const ENVIRONMENT_KEYS = ['production', 'qa', 'dev-1', 'dev-2', 'dev-3', 'dev-4', 'dev-5', 'dev-6'] as const;
 
 export const SUITES = ['smoke', 'full', 'api', 'auth', 'regression', 'admin', 'purchasing', 'validation', 'a11y', 'custom-grep'] as const;

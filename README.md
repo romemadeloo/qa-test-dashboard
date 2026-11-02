@@ -1,6 +1,9 @@
 # QA Test Automation and Monitoring
 
-A Next.js app (on Vercel) with a Supabase backend for the Playwright suite in this repository.
+A Next.js app (on Vercel) with a Supabase backend for the Musticker Playwright suite
+([romemadeloo/musticker-e2e](https://github.com/romemadeloo/musticker-e2e), the *test repo* below). The dashboard
+and the tests live in separate repositories; they meet only through the reporter's HTTP calls and GitHub
+`workflow_dispatch`.
 
 | Section | What it shows |
 | --- | --- |
@@ -31,16 +34,16 @@ deactivate or delete them. People sign in with their username (or an email, for 
 ## How data gets in
 
 ```
-playwright test ──► tests/reporters/dashboard-reporter.ts ──POST /api/ingest/runs──► Supabase
+playwright test ──► tests/reporters/dashboard-reporter.ts (test repo) ──POST /api/ingest/runs──► Supabase
                      begin: test catalog + run metadata
                      results: final attempt per test, batches of 50
                      end: run status (last shard settles the run)
 
-Dashboard "Run tests" / Scheduler cron ──► GitHub workflow_dispatch (manual-playwright.yml, dashboard_run_id)
+Dashboard "Run tests" / Scheduler cron ──► GitHub workflow_dispatch on the test repo (manual-playwright.yml, dashboard_run_id)
                                             └─► the reporter fills in that queued execution
 ```
 
-The reporter is already in `playwright.config.ts` and does nothing until `DASHBOARD_URL` and
+The reporter is registered in the test repo's `playwright.config.ts` and does nothing until `DASHBOARD_URL` and
 `DASHBOARD_INGEST_TOKEN` are set. Shards of one GitHub run (same `GITHUB_RUN_ID`) become one execution.
 Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFlakyTests` on CI.
 
@@ -53,14 +56,14 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
    (the seed adds the Musticker project, the eight environments and three disabled schedules).
    With the Supabase CLI instead: `npx supabase init`, `npx supabase link --project-ref <ref>`, `npx supabase db push`,
    then run the seed in the SQL editor.
-3. **Authentication → Sign In / Providers → Email**: turn off "Allow new users to sign up". Every signed-in user has full
-   access (see the RLS policies), so accounts should only be created by an admin under **Authentication → Users**.
+3. **Authentication → Sign In / Providers → Email**: turn off "Allow new users to sign up". Accounts are created by a super
+   admin on **System → Users**.
 4. **Authentication → URL Configuration**: set the Site URL to the Vercel URL and add `<vercel-url>/auth/callback` as a
    redirect URL (for Supabase's emailed links, such as password resets).
 
 ### 2. Vercel
 
-1. Import the GitHub repository and set **Root Directory** to `dashboard`. The framework is detected as Next.js.
+1. Import this GitHub repository (Root Directory stays the repository root). The framework is detected as Next.js.
 2. Add the environment variables from `.env.example`:
 
    | Variable | Where it comes from |
@@ -69,7 +72,7 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
    | `SUPABASE_SERVICE_ROLE_KEY` | Same page. Server only; never prefix with `NEXT_PUBLIC_` |
    | `DASHBOARD_INGEST_TOKEN` | Any long random string; the same value goes to GitHub and local `.env` |
    | `CRON_SECRET` | Any long random string; Vercel sends it to the cron route |
-   | `GITHUB_TOKEN` | Fine-grained PAT, this repo only, **Actions: Read and write** |
+   | `GITHUB_TOKEN` | Fine-grained PAT for the **test repo** only, **Actions: Read and write** |
    | `SLACK_WEBHOOK_URL` | Optional incoming webhook |
    | `NEXT_PUBLIC_SITE_URL` | The deployment URL |
 
@@ -80,22 +83,24 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
 
 ### 3. GitHub Actions
 
-Add repository secrets `DASHBOARD_URL` (the Vercel URL), `DASHBOARD_INGEST_TOKEN`, and `DASHBOARD_CRON_SECRET` (the
-deployment's `CRON_SECRET`). `manual-playwright.yml` already passes the first two, plus `dashboard_run_id` and
-`DASHBOARD_SUITE`. To have the other workflows report too, add the same two
-`env` entries (and `DASHBOARD_SUITE: <name>`) to them.
+**This repository** (the scheduler tick in `.github/workflows/dashboard-scheduler.yml`): add secrets `DASHBOARD_URL`
+(the Vercel URL) and `DASHBOARD_CRON_SECRET` (the deployment's `CRON_SECRET`).
 
-In the dashboard, open **Settings** and fill in the GitHub owner, repository, workflow file and ref.
+**The test repo**: add secrets `DASHBOARD_URL` and `DASHBOARD_INGEST_TOKEN`. Its `manual-playwright.yml` already passes
+them, plus `dashboard_run_id` and `DASHBOARD_SUITE`. To have the other workflows report too, add the same two `env`
+entries (and `DASHBOARD_SUITE: <name>`) to them.
+
+In the dashboard, open **Settings** and fill in the test repo's GitHub owner, repository, workflow file and ref
+(`production`).
 
 ### 4. Local runs
 
-Add `DASHBOARD_URL`, `DASHBOARD_INGEST_TOKEN` and `DASHBOARD_PROJECT` to the repo's `.env`; local runs then appear with
+Add `DASHBOARD_URL`, `DASHBOARD_INGEST_TOKEN` and `DASHBOARD_PROJECT` to the test repo's `.env`; local runs then appear with
 trigger `local`.
 
 ## Develop
 
 ```bash
-cd dashboard
 npm install
 cp .env.example .env.local   # fill in
 npm run dev
@@ -105,9 +110,10 @@ npm run build
 
 ## Notes
 
-- The scheduler's environment, suite and browser options mirror `manual-playwright.yml`'s `workflow_dispatch` inputs
-  (`lib/constants.ts`). Change both together.
+- The scheduler's environment, suite and browser options mirror the test repo's `manual-playwright.yml`
+  `workflow_dispatch` inputs (`lib/constants.ts`). Change both together: add a value to the workflow first, since
+  GitHub rejects one it does not list.
 - The cron also marks runs stuck in queued/running for 6 hours as interrupted, and deletes executions older than each
   project's retention.
 - Removed or renamed tests stay in the catalog with their history; retire them under Test cases.
-- `docs/test-cases.xlsx` remains the source of truth for case steps; the dashboard tracks execution.
+- The test repo's `docs/test-cases.xlsx` remains the source of truth for case steps; the dashboard tracks execution.
