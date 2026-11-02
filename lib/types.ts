@@ -1,3 +1,16 @@
+export type Role = 'QA' | 'Frontend' | 'Backend' | 'Supervisor' | 'General Manager' | 'Manager';
+
+export type Profile = {
+  id: string;
+  username: string;
+  full_name: string;
+  role: Role;
+  is_superadmin: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Project = {
   id: string;
   slug: string;

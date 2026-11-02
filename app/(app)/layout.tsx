@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
-import { AppShell } from '@/components/app-shell';
+import { AppShell, type Viewer } from '@/components/app-shell';
+import { getViewer } from '@/lib/viewer';
 import { FOLDED_COOKIE, NAV_COOKIE, PROJECT_COOKIE } from '@/lib/constants';
 import { getProjects } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
@@ -8,7 +9,13 @@ import type { Settings } from '@/lib/types';
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
-  const [{ data: auth }, projects] = await Promise.all([supabase.auth.getUser(), getProjects()]);
+  const [{ user, profile }, projects] = await Promise.all([getViewer(), getProjects()]);
+  const viewer: Viewer = {
+    name: profile?.full_name ?? user?.email?.split('@')[0] ?? 'User',
+    username: profile?.username ?? user?.email ?? '',
+    role: profile?.role ?? null,
+    isSuperadmin: profile?.is_superadmin ?? false
+  };
   const jar = await cookies();
   const selected = jar.get(PROJECT_COOKIE)?.value;
   const initialCollapsed = jar.get(NAV_COOKIE)?.value === 'collapsed';
@@ -41,7 +48,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
     <AppShell
       projects={projects}
       currentId={currentId}
-      email={auth.user?.email ?? ''}
+      viewer={viewer}
       recentFailures={recentFailures ?? 0}
       initialCollapsed={initialCollapsed}
       initialFolded={initialFolded}

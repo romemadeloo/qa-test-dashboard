@@ -23,6 +23,18 @@ export const CRON_PRESETS = [
 
 export const PROJECT_COOKIE = 'qa_project';
 
+export const ROLES = ['QA', 'Frontend', 'Backend', 'Supervisor', 'General Manager', 'Manager'] as const;
+
+// Supabase Auth needs an email; accounts created on the Users page get one under this domain,
+// which never receives mail. Sign-in accepts the bare username and maps it here.
+export const USERNAME_EMAIL_DOMAIN = 'users.qa-dashboard.internal';
+export const USERNAME_PATTERN = /^[a-z0-9._-]{3,32}$/;
+
+export function loginEmailFor(identifier: string): string {
+  const id = identifier.trim().toLowerCase();
+  return id.includes('@') ? id : `${id}@${USERNAME_EMAIL_DOMAIN}`;
+}
+
 // Sidebar state: 'collapsed' hides the nav panel; folded holds group titles joined by '|'.
 export const NAV_COOKIE = 'qa_nav';
 export const FOLDED_COOKIE = 'qa_nav_folded';

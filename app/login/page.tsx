@@ -28,10 +28,10 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <form className="space-y-4">
           <input type="hidden" name="next" value={next} />
           <div>
-            <label className="label" htmlFor="email">
-              Email
+            <label className="label" htmlFor="identifier">
+              Username or email
             </label>
-            <input id="email" name="email" type="email" required autoComplete="email" className="input w-full" />
+            <input id="identifier" name="identifier" type="text" required autoComplete="username" autoCapitalize="none" spellCheck={false} className="input w-full" />
           </div>
           <div>
             <label className="label" htmlFor="password">

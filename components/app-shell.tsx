@@ -24,6 +24,7 @@ import {
   Server,
   Settings,
   Sun,
+  UsersRound,
   X
 } from 'lucide-react';
 import { FOLDED_COOKIE, NAV_COOKIE } from '@/lib/constants';
@@ -102,13 +103,17 @@ function ThemeToggle() {
   );
 }
 
-function Avatar({ email, size = 44 }: { email: string; size?: number }) {
-  const initials = (email.split('@')[0] || '?')
-    .split(/[._-]/)
-    .map((p) => p[0])
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+export type Viewer = { name: string; username: string; role: string | null; isSuperadmin: boolean };
+
+function Avatar({ name, size = 44 }: { name: string; size?: number }) {
+  const initials =
+    name
+      .split(/[\s._-]+/)
+      .filter(Boolean)
+      .map((p) => p[0])
+      .join('')
+      .slice(0, 2)
+      .toUpperCase() || '?';
   return (
     <span
       className="grid shrink-0 place-items-center rounded-full font-extrabold text-white"
@@ -123,7 +128,7 @@ function Avatar({ email, size = 44 }: { email: string; size?: number }) {
 export function AppShell({
   projects,
   currentId,
-  email,
+  viewer,
   recentFailures,
   initialCollapsed,
   initialFolded,
@@ -132,7 +137,7 @@ export function AppShell({
 }: {
   projects: Project[];
   currentId: string;
-  email: string;
+  viewer: Viewer;
   recentFailures: number;
   initialCollapsed: boolean;
   initialFolded: string[];
@@ -146,6 +151,10 @@ export function AppShell({
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  // Users is listed only for super admins; the page itself also checks.
+  const navGroups = viewer.isSuperadmin
+    ? groups.map((g) => (g.title === 'System' ? { ...g, items: [{ href: '/users', label: 'Users', icon: UsersRound }, ...g.items] } : g))
+    : groups;
 
   useEffect(() => setDrawerOpen(false), [pathname]);
 
@@ -231,7 +240,7 @@ export function AppShell({
       </div>
 
       <nav className={`flex-1 px-3 pb-3 ${collapsed ? 'overflow-visible' : 'overflow-x-hidden overflow-y-auto'}`}>
-        {groups.map((group) => {
+        {navGroups.map((group) => {
           const isFolded = !collapsed && folded.has(group.title);
           return (
             <div key={group.title} className="mt-3">
@@ -355,16 +364,22 @@ export function AppShell({
             </Link>
             <div className="relative ml-1" ref={menuRef}>
               <button type="button" onClick={() => setMenuOpen((o) => !o)} aria-expanded={menuOpen} aria-label="Account menu" className="rounded-full">
-                <Avatar email={email} />
+                <Avatar name={viewer.name} />
               </button>
               {menuOpen && (
                 <div className="card animate-rise absolute right-0 mt-3 w-64 p-4">
                   <div className="flex items-center gap-3">
-                    <Avatar email={email} size={40} />
+                    <Avatar name={viewer.name} size={40} />
                     <div className="min-w-0">
-                      <div className="truncate text-sm font-bold">{email.split('@')[0]}</div>
-                      <div className="truncate text-xs text-[var(--muted)]">{email}</div>
+                      <div className="truncate text-sm font-bold">{viewer.name}</div>
+                      <div className="truncate text-xs text-[var(--muted)]">@{viewer.username}</div>
                     </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-1.5">
+                    {viewer.role && <span className="rounded-full bg-[var(--surface-2)] px-2.5 py-1 text-xs font-bold">{viewer.role}</span>}
+                    {viewer.isSuperadmin && (
+                      <span className="rounded-full bg-[var(--accent-soft)] px-2.5 py-1 text-xs font-bold text-accent">Super admin</span>
+                    )}
                   </div>
                   <form action={signOut} className="mt-4">
                     <button type="submit" className="btn w-full justify-center">
@@ -380,10 +395,6 @@ export function AppShell({
           <div className="mx-auto max-w-[1320px]">{children}</div>
         </main>
       </div>
-
-      <Link href="/settings" className="fab no-print" aria-label="Settings" title="Settings">
-        <Settings size={26} />
-      </Link>
 
       {/* useSearchParams needs a Suspense boundary. */}
       <Suspense fallback={null}>

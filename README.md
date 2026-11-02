@@ -15,6 +15,18 @@ A Next.js app (on Vercel) with a Supabase backend for the Playwright suite in th
 | Environments | production, qa, dev-1 … dev-6 with URLs, 30-day pass rate, last run and an on-demand health check |
 | Settings | GitHub dispatch target, defaults, retention, Slack-on-failure, deployment secret status, reporter setup |
 
+## Accounts
+
+There is no public sign-up. **Super admins** create accounts on **System → Users** with a full name, username,
+password and role (QA, Frontend, Backend, Supervisor, General Manager, Manager), and can edit, reset passwords,
+deactivate or delete them. People sign in with their username (or an email, for accounts made in Supabase).
+
+- Profiles live in `public.profiles`; Supabase Auth still holds the sign-in. Accounts created on the Users page get
+  an internal email `<username>@users.qa-dashboard.internal` that never receives mail, so passwords are reset by a
+  super admin, not by email.
+- Roles are labels for now: every signed-in user can use the whole dashboard; only super admins manage users.
+- Accounts that existed before user management became super admins (migration `20261102000000_user_profiles.sql`).
+
 ## How data gets in
 
 ```

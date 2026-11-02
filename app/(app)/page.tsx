@@ -12,6 +12,7 @@ import { formatDateTime, formatDuration, formatPercent, formatRelative } from '@
 import { getCurrentProject } from '@/lib/project';
 import { sinceDay, toDaySeries, totals } from '@/lib/stats';
 import { createClient } from '@/lib/supabase/server';
+import { getViewer } from '@/lib/viewer';
 import type { CaseStat, DailyStat, Environment, Execution, Schedule } from '@/lib/types';
 
 export const dynamic = 'force-dynamic';
@@ -26,8 +27,8 @@ export default async function DashboardPage() {
   const { project } = await getCurrentProject();
   const supabase = await createClient();
 
-  const [auth, recent, daily, caseCount, flakyCases, schedules, environments, envRuns, moduleRows] = await Promise.all([
-    supabase.auth.getUser(),
+  const [viewer, recent, daily, caseCount, flakyCases, schedules, environments, envRuns, moduleRows] = await Promise.all([
+    getViewer(),
     supabase.from('executions').select('*').eq('project_id', project.id).order('created_at', { ascending: false }).limit(8),
     supabase.from('v_daily_stats').select('*').eq('project_id', project.id).gte('day', sinceDay(14)),
     supabase.from('test_cases').select('id', { count: 'exact', head: true }).eq('project_id', project.id).eq('status', 'active'),
@@ -53,7 +54,8 @@ export default async function DashboardPage() {
   const skipped = series.reduce((a, p) => a + p.skipped, 0);
   const durations = executions.filter((e) => e.duration_ms != null).map((e) => e.duration_ms!);
   const avgDuration = durations.length ? Math.round(durations.reduce((a, b) => a + b, 0) / durations.length) : null;
-  const name = (auth.data.user?.email ?? '').split('@')[0].split(/[._-]/)[0] || 'there';
+  // First name from the profile, else the start of the email.
+  const name = (viewer.profile?.full_name ?? viewer.user?.email?.split('@')[0] ?? '').split(/[\s._-]/)[0] || 'there';
 
   const lastByEnv = new Map<string, { status: string; created_at: string; id: string }>();
   for (const r of envRuns.data ?? []) {
