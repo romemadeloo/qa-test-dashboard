@@ -1,15 +1,22 @@
+import Link from 'next/link';
+import { Suspense } from 'react';
+import { Pencil, Plus } from 'lucide-react';
 import { Card, EmptyState, Notice, PageHeader, StatTile } from '@/components/ui';
+import { ProjectModal } from '@/components/project-modal';
 import { StatusBadge } from '@/components/status-badge';
 import { formatRelative } from '@/lib/format';
 import { getProjects } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
 import { selectProject } from '../actions';
-import { createProject, deleteProject } from './actions';
 
 export const dynamic = 'force-dynamic';
 
-export default async function ProjectsPage({ searchParams }: { searchParams: Promise<{ error?: string; created?: string; empty?: string }> }) {
-  const { error, created, empty } = await searchParams;
+export default async function ProjectsPage({
+  searchParams
+}: {
+  searchParams: Promise<{ error?: string; created?: string; saved?: string; empty?: string }>;
+}) {
+  const { error, created, saved, empty } = await searchParams;
   const projects = await getProjects();
   const supabase = await createClient();
 
@@ -26,12 +33,21 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
 
   return (
     <>
-      <PageHeader title="Projects" description="Each project is one Playwright repository reporting into this dashboard." />
+      <PageHeader
+        title="Projects"
+        description="Each project is one Playwright repository reporting into this dashboard."
+        actions={
+          <Link href="/projects?project=new" scroll={false} className="btn btn-primary">
+            <Plus size={16} aria-hidden /> New project
+          </Link>
+        }
+      />
       {error && <Notice tone="error">{error}</Notice>}
       {created && <Notice tone="success">Project created and selected. Point its reporter at it with DASHBOARD_PROJECT=&lt;slug&gt;.</Notice>}
+      {saved && <Notice tone="success">Project saved.</Notice>}
       {empty && projects.length === 0 && <Notice>Create a project to get started, or run supabase/seed.sql.</Notice>}
 
-      <div className="mb-8 grid gap-4 md:grid-cols-2">
+      <div className="grid gap-4 md:grid-cols-2">
         {summaries.map(({ project, cases, suites, last }) => (
           <Card key={project.id}>
             <div className="p-4">
@@ -40,12 +56,17 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                   <h2 className="font-semibold">{project.name}</h2>
                   <div className="font-mono text-xs text-muted">{project.slug}</div>
                 </div>
-                <form action={selectProject}>
-                  <input type="hidden" name="projectId" value={project.id} />
-                  <button className="btn" type="submit">
-                    Open
-                  </button>
-                </form>
+                <div className="flex shrink-0 gap-2">
+                  <Link href={`/projects?project=${project.id}`} scroll={false} className="btn">
+                    <Pencil size={14} aria-hidden /> Edit
+                  </Link>
+                  <form action={selectProject}>
+                    <input type="hidden" name="projectId" value={project.id} />
+                    <button className="btn" type="submit">
+                      Open
+                    </button>
+                  </form>
+                </div>
               </div>
               {project.description && <p className="mt-2 text-sm text-ink-2">{project.description}</p>}
               {project.repo_url && (
@@ -58,16 +79,6 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
                 <StatTile label="Test cases" value={cases} />
                 <StatTile label="Last run" value={<StatusBadge status={last?.status} />} hint={last ? formatRelative(last.created_at) : undefined} />
               </div>
-              <details className="mt-4 text-sm">
-                <summary className="cursor-pointer text-xs text-muted">Delete project</summary>
-                <form action={deleteProject} className="mt-2 flex flex-wrap gap-2">
-                  <input type="hidden" name="id" value={project.id} />
-                  <input name="confirm" placeholder={`Type ${project.slug}`} className="input" aria-label="Confirm slug" />
-                  <button className="btn btn-danger" type="submit">
-                    Delete with all runs
-                  </button>
-                </form>
-              </details>
             </div>
           </Card>
         ))}
@@ -78,39 +89,9 @@ export default async function ProjectsPage({ searchParams }: { searchParams: Pro
         )}
       </div>
 
-      <Card title="New project">
-        <form action={createProject} className="grid gap-3 p-4 md:grid-cols-2">
-          <div>
-            <label className="label" htmlFor="name">
-              Name
-            </label>
-            <input id="name" name="name" required className="input w-full" placeholder="Musticker E2E" />
-          </div>
-          <div>
-            <label className="label" htmlFor="slug">
-              Slug (reporter&apos;s DASHBOARD_PROJECT)
-            </label>
-            <input id="slug" name="slug" required className="input w-full" placeholder="musticker" />
-          </div>
-          <div>
-            <label className="label" htmlFor="repo_url">
-              Repository URL
-            </label>
-            <input id="repo_url" name="repo_url" type="url" className="input w-full" />
-          </div>
-          <div>
-            <label className="label" htmlFor="description">
-              Description
-            </label>
-            <input id="description" name="description" className="input w-full" />
-          </div>
-          <div>
-            <button className="btn btn-primary" type="submit">
-              Create project
-            </button>
-          </div>
-        </form>
-      </Card>
+      <Suspense fallback={null}>
+        <ProjectModal projects={projects} />
+      </Suspense>
     </>
   );
 }

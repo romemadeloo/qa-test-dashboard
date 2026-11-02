@@ -29,6 +29,7 @@ import {
 import { FOLDED_COOKIE, NAV_COOKIE } from '@/lib/constants';
 import type { Project } from '@/lib/types';
 import { selectProject, signOut } from '@/app/(app)/actions';
+import { Logo } from './logo';
 import { RunModal, type RunTarget } from './run-modal';
 
 type NavItem = { href: string; label: string; icon: typeof LayoutDashboard };
@@ -75,15 +76,6 @@ function writeCookie(name: string, value: string) {
 
 function isActive(pathname: string, href: string) {
   return href === '/' ? pathname === '/' : pathname === href || pathname.startsWith(`${href}/`);
-}
-
-function Logo() {
-  return (
-    <svg width="34" height="28" viewBox="0 0 34 28" aria-hidden>
-      <path d="M3 24 L11 4 L17 16 L23 4 L31 24" fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx="3" cy="24" r="3" fill="#8965e5" />
-    </svg>
-  );
 }
 
 function ThemeToggle() {

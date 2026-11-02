@@ -1,3 +1,4 @@
+import { Logo } from '@/components/logo';
 import { signIn } from './actions';
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string; error?: string }> }) {
@@ -10,10 +11,9 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
 
       <div className="card relative w-full max-w-[420px] p-8">
         <div className="mb-7 flex items-center gap-3">
-          <svg width="40" height="32" viewBox="0 0 34 28" aria-hidden>
-            <path d="M3 24 L11 4 L17 16 L23 4 L31 24" fill="none" stroke="var(--accent)" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" />
-            <circle cx="3" cy="24" r="3" fill="#8965e5" />
-          </svg>
+          <span className="shrink-0">
+            <Logo size={42} />
+          </span>
           <div>
             <h1 className="text-lg leading-tight font-extrabold tracking-tight">QA Test Automation and Monitoring</h1>
             <p className="text-sm font-semibold text-[var(--muted)]">Playwright runs, results and schedules</p>

@@ -478,6 +478,20 @@ select.input {
   animation: rise 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) both;
   animation-delay: calc(var(--i, 0) * 70ms);
 }
+/* Logo smoke: each puff rises a little and fades, staggered by inline delays. */
+@keyframes puff {
+  0% {
+    transform: translateY(1.5px) scale(0.92);
+  }
+  100% {
+    transform: translateY(-1.5px) scale(1.06);
+  }
+}
+.logo-puff {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: puff 1.8s ease-in-out infinite alternate;
+}
 @keyframes modal-in {
   from {
     opacity: 0;
