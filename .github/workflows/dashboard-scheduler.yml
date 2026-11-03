@@ -1,9 +1,9 @@
 name: Dashboard scheduler tick
 
-# Starts due QA-dashboard schedules (app/api/cron/scheduler). Vercel's Hobby plan runs
-# its own cron at most daily (vercel.json, 00:00 KST), so this tick provides the
-# 15-minute resolution. GitHub may delay scheduled workflows under load; the route only dispatches
-# occurrences that are due and never the same one twice.
+# Backup caller for the QA-dashboard scheduler (app/api/cron/scheduler). Supabase pg_cron is the
+# 15-minute tick (supabase/migrations/20261104000000_scheduler_pg_cron.sql); GitHub delays this
+# schedule by hours under load, so it only fills in if pg_cron stops. The route dispatches each due
+# occurrence once, however many callers reach it.
 
 on:
   schedule:

@@ -56,6 +56,9 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
    (the seed adds the Musticker project, the eight environments and three disabled schedules).
    With the Supabase CLI instead: `npx supabase init`, `npx supabase link --project-ref <ref>`, `npx supabase db push`,
    then run the seed in the SQL editor.
+   The `scheduler_pg_cron` migration makes Supabase call the scheduler every 15 minutes (pg_cron + pg_net). Once the
+   Vercel deployment has its `CRON_SECRET`, store the same value in Vault so the job can authenticate:
+   `select vault.create_secret('<CRON_SECRET>', 'dashboard_cron_secret');`. Until then the job does nothing.
 3. **Authentication → Sign In / Providers → Email**: turn off "Allow new users to sign up". Accounts are created by a super
    admin on **System → Users**.
 4. **Authentication → URL Configuration**: set the Site URL to the Vercel URL and add `<vercel-url>/auth/callback` as a
@@ -77,13 +80,14 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
    | `NEXT_PUBLIC_SITE_URL` | The deployment URL |
 
 3. Deploy. `vercel.json` pins the Next.js framework and runs `/api/cron/scheduler` once a day (00:00 KST), the most the
-   Hobby plan allows. The 15-minute scheduler resolution comes from `.github/workflows/dashboard-scheduler.yml`, which
-   calls the same route with `DASHBOARD_CRON_SECRET`. On a Pro plan you can set the Vercel cron to `*/15 * * * *` and
-   drop that workflow.
+   Hobby plan allows. The 15-minute scheduler resolution comes from Supabase pg_cron (see step 1). Vercel's daily cron
+   and `.github/workflows/dashboard-scheduler.yml` call the same route as backups; GitHub alone is not enough, since it
+   delayed its `*/15` schedule by 5 to 7 hours at a time (2026-11-02 to 04). The route starts each occurrence once,
+   however many callers reach it.
 
 ### 3. GitHub Actions
 
-**This repository** (the scheduler tick in `.github/workflows/dashboard-scheduler.yml`): add secrets `DASHBOARD_URL`
+**This repository** (the backup scheduler tick in `.github/workflows/dashboard-scheduler.yml`): add secrets `DASHBOARD_URL`
 (the Vercel URL) and `DASHBOARD_CRON_SECRET` (the deployment's `CRON_SECRET`).
 
 **The test repo**: add secrets `DASHBOARD_URL` and `DASHBOARD_INGEST_TOKEN`. Its `manual-playwright.yml` already passes

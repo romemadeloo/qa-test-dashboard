@@ -18,8 +18,8 @@ export function nextRuns(expression: string, timezone: string, count = 1, from =
   }
 }
 
-// A schedule is due when its most recent occurrence is later than the last time it ran. The Vercel
-// cron ticks every 15 minutes, so an occurrence is picked up at most one tick late and never twice.
+// A schedule is due when its most recent occurrence is later than the last time it ran. pg_cron ticks
+// every 15 minutes, so an occurrence is picked up at most one tick late and never twice.
 export function isDue(expression: string, timezone: string, lastRunAt: Date | null, createdAt: Date, now = new Date()): boolean {
   try {
     const previous = CronExpressionParser.parse(expression, { tz: timezone, currentDate: now }).prev().toDate();
