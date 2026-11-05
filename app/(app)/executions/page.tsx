@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic';
 
 const STATUSES = ['queued', 'running', 'passed', 'failed', 'flaky', 'interrupted', 'timedout', 'cancelled'];
 const TRIGGERS = ['ci', 'schedule', 'manual', 'local'];
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 10;
 
 export default async function ExecutionsPage({
   searchParams
