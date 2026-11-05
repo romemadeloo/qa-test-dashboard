@@ -34,8 +34,8 @@ export function ExecutionsTable({ executions, compact = false }: { executions: E
                 {e.grep && <span className="ml-1.5 tag">{e.grep}</span>}
               </td>
               <td>{e.environment_key ?? '—'}</td>
-              {!compact && <td className="text-ink-2">{e.browser_project ?? '—'}</td>}
-              {!compact && <td className="text-ink-2 capitalize">{e.trigger}</td>}
+              {!compact && <td className="whitespace-nowrap text-ink-2">{e.browser_project ?? '—'}</td>}
+              {!compact && <td className="whitespace-nowrap text-ink-2 capitalize">{e.trigger}</td>}
               <td className="align-middle">
                 <ResultBar passed={e.passed} flaky={e.flaky} failed={e.failed} skipped={e.skipped} />
               </td>
@@ -54,15 +54,13 @@ export function ExecutionsTable({ executions, compact = false }: { executions: E
   );
 }
 
-// Date and time (KST) of the run, with how long ago underneath.
+// Date and time (KST) of the run on one line, so a page of runs fits the screen; how long ago on hover.
 function ExecutedAt({ value }: { value: string }) {
   const parts = formatDateParts(value);
   return (
     <td className="num whitespace-nowrap" title={formatRelative(value)}>
-      <div className="font-semibold text-ink">{parts?.date ?? '—'}</div>
-      <div className="text-xs text-[var(--muted)]">
-        {parts?.time} · {formatRelative(value)}
-      </div>
+      <span className="font-semibold text-ink">{parts?.date ?? '—'}</span>
+      <span className="ml-2 text-xs text-[var(--muted)]">{parts?.time}</span>
     </td>
   );
 }

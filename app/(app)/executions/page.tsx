@@ -78,29 +78,28 @@ export default async function ExecutionsPage({
           Filter
         </button>
         <span className="text-xs text-muted">{count ?? 0} runs</span>
+        {pages > 1 && (
+          <nav aria-label="Pagination" className="ml-auto flex items-center gap-2 text-sm">
+            {pageNo > 1 && (
+              <Link className="btn" href={href(pageNo - 1)}>
+                Previous
+              </Link>
+            )}
+            <span className="text-muted">
+              Page {pageNo} of {pages}
+            </span>
+            {pageNo < pages && (
+              <Link className="btn" href={href(pageNo + 1)}>
+                Next
+              </Link>
+            )}
+          </nav>
+        )}
       </form>
 
       <Card>
         {executions.length ? <ExecutionsTable executions={executions} /> : <EmptyState title="No executions match" />}
       </Card>
-
-      {pages > 1 && (
-        <nav className="mt-4 flex items-center justify-end gap-2 text-sm">
-          {pageNo > 1 && (
-            <Link className="btn" href={href(pageNo - 1)}>
-              Previous
-            </Link>
-          )}
-          <span className="text-muted">
-            Page {pageNo} of {pages}
-          </span>
-          {pageNo < pages && (
-            <Link className="btn" href={href(pageNo + 1)}>
-              Next
-            </Link>
-          )}
-        </nav>
-      )}
     </>
   );
 }
