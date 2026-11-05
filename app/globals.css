@@ -126,7 +126,7 @@ body {
 
 .tile {
   border-radius: 22px;
-  padding: 22px;
+  padding: 16px 20px;
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
 .tile:hover {
@@ -136,9 +136,9 @@ body {
 .tile-icon {
   display: grid;
   place-items: center;
-  width: 54px;
-  height: 54px;
-  border-radius: 18px;
+  width: 48px;
+  height: 48px;
+  border-radius: 16px;
   color: #fff;
   transition: transform 0.35s ease;
 }

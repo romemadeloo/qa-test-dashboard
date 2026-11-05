@@ -88,12 +88,16 @@ export function ToneTile({
 }) {
   const body = (
     <>
-      <div className="tile-icon" style={{ background: `var(--tint-${tone}-icon)` }}>
-        {icon}
+      <div className="flex items-center gap-4">
+        <div className="tile-icon shrink-0" style={{ background: `var(--tint-${tone}-icon)` }}>
+          {icon}
+        </div>
+        <div className="min-w-0">
+          <div className="text-sm font-bold text-ink-2">{label}</div>
+          <div className="mt-1 text-[24px] leading-none font-extrabold tracking-tight">{value}</div>
+          {delta && <div className="mt-1.5 truncate text-xs font-semibold text-ink-2">{delta}</div>}
+        </div>
       </div>
-      <div className="mt-8 text-[26px] leading-none font-extrabold tracking-tight">{value}</div>
-      {delta && <div className="mt-2.5 text-sm font-semibold text-ink-2">{delta}</div>}
-      <div className="mt-3 text-[17px] font-bold text-ink-2">{label}</div>
     </>
   );
   const style = { background: `var(--tint-${tone})` };

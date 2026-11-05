@@ -134,9 +134,9 @@ export function TrendCard({
       </header>
       <div className="flex-1 px-3 pt-4">
         {view === 'rate' ? (
-          <LineTrend key="rate" data={data} dataKey="passRate" unit="%" domain={[0, 100]} label="Pass rate" height={290} />
+          <LineTrend key="rate" data={data} dataKey="passRate" unit="%" domain={[0, 100]} label="Pass rate" height={240} />
         ) : (
-          <LineTrend key="duration" data={data} dataKey="avgDurationMin" unit="m" label="Average run duration" color="var(--series-2)" height={290} />
+          <LineTrend key="duration" data={data} dataKey="avgDurationMin" unit="m" label="Average run duration" color="var(--series-2)" height={240} />
         )}
       </div>
       <div className="flex flex-wrap items-center gap-6 px-6 pt-2 pb-6">

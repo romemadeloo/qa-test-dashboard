@@ -72,28 +72,28 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <div className="mb-7 grid gap-6 md:grid-cols-3">
-        <section className="hero animate-rise min-h-[250px] p-7 md:col-span-3">
+      <div className="mb-5 grid gap-4 md:grid-cols-3">
+        <section className="hero animate-rise min-h-[160px] px-7 py-5 md:col-span-3">
           <HeroArt />
           <div className="relative max-w-[60%] max-sm:max-w-full">
-            <h1 className="text-[26px] leading-tight font-extrabold">
+            <h1 className="text-[22px] leading-tight font-extrabold">
               Welcome back, <span className="capitalize">{name}</span>!
             </h1>
-            <p className="mt-1.5 text-[15px] font-semibold text-white/85">Here&apos;s how {project.name} is doing.</p>
+            <p className="mt-1 text-sm font-semibold text-white/85">Here&apos;s how {project.name} is doing.</p>
           </div>
-          <div className="relative mt-7 inline-flex flex-wrap items-center gap-6 rounded-[20px] bg-white/15 px-6 py-4 backdrop-blur-sm">
+          <div className="relative mt-4 inline-flex flex-wrap items-center gap-5 rounded-[18px] bg-white/15 px-5 py-2.5 backdrop-blur-sm">
             <div>
-              <div className="text-[26px] leading-none font-extrabold">{caseCount.count ?? 0}</div>
-              <div className="mt-1 text-sm font-semibold text-white/85">Active tests</div>
+              <div className="text-[22px] leading-none font-extrabold">{caseCount.count ?? 0}</div>
+              <div className="mt-1 text-xs font-semibold text-white/85">Active tests</div>
             </div>
-            <div className="h-10 w-px bg-white/25" aria-hidden />
+            <div className="h-8 w-px bg-white/25" aria-hidden />
             <div>
-              <div className="text-[26px] leading-none font-extrabold">{formatDuration(avgDuration)}</div>
-              <div className="mt-1 text-sm font-semibold text-white/85">Avg run</div>
+              <div className="text-[22px] leading-none font-extrabold">{formatDuration(avgDuration)}</div>
+              <div className="mt-1 text-xs font-semibold text-white/85">Avg run</div>
             </div>
           </div>
           {lastRun && (
-            <Link href={`/executions/${lastRun.id}`} className="relative mt-5 flex w-fit items-center gap-2 text-sm font-bold text-white/90 hover:text-white">
+            <Link href={`/executions/${lastRun.id}`} className="relative mt-3 flex w-fit items-center gap-2 text-sm font-bold text-white/90 hover:text-white">
               Last run: {lastRun.suite ?? 'run'} on {lastRun.environment_key} · {formatRelative(lastRun.started_at ?? lastRun.created_at)} →
             </Link>
           )}
@@ -124,7 +124,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <div className="mb-7 grid gap-6 lg:grid-cols-3">
+      <div className="mb-7 grid gap-4 lg:grid-cols-3">
         <div className="lg:col-span-2">
           <TrendCard data={series} passRate={formatPercent(all.passRate)} runs={all.runs} avgDuration={formatDuration(avgDuration)} />
         </div>
