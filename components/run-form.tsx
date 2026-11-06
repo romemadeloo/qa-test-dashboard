@@ -1,21 +1,25 @@
 'use client';
 
 import { useState } from 'react';
-import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES, WORKFLOW_EXCLUDED_TAGS } from '@/lib/constants';
+import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES, WORKER_OPTIONS, WORKFLOW_EXCLUDED_TAGS } from '@/lib/constants';
 
 // Shared by the Run tests modal and the schedule editor. Values map 1:1 to manual-playwright.yml inputs.
 export function RunFields({
   defaults,
   tags,
-  idPrefix = ''
+  idPrefix = '',
+  showWorkers = false
 }: {
   defaults: { environment?: string; suite?: string; browser_project?: string; custom_grep?: string | null };
   // Tags synced from the test catalog; custom grep picks from these.
   tags: string[];
   idPrefix?: string;
+  // Run tests only: schedules are not stored with a worker count, so they keep the workflow's default.
+  showWorkers?: boolean;
 }) {
   const [environment, setEnvironment] = useState(defaults.environment ?? 'qa');
   const [suite, setSuite] = useState(defaults.suite ?? 'smoke');
+  const [workers, setWorkers] = useState('auto');
 
   return (
     <>
@@ -55,7 +59,26 @@ export function RunFields({
           ))}
         </select>
       </div>
+      {showWorkers && (
+        <div>
+          <label className="label" htmlFor={`${idPrefix}workers`}>
+            Workers
+          </label>
+          <select id={`${idPrefix}workers`} name="workers" value={workers} onChange={(e) => setWorkers(e.target.value)} className="input w-full">
+            {WORKER_OPTIONS.map((w) => (
+              <option key={w} value={w}>
+                {w === 'auto' ? `auto (${environment === 'production' ? '1 on production' : '2'})` : w}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
       {suite === 'custom-grep' && <TagPicker tags={tags} initialGrep={defaults.custom_grep ?? ''} />}
+      {showWorkers && environment === 'production' && !['auto', '1'].includes(workers) && (
+        <p className="col-span-full text-xs text-critical-text">
+          More than 1 worker on production makes its firewall refuse requests (403), so expect failures that are not real defects.
+        </p>
+      )}
       {environment === 'production' && (
         <p className="col-span-full text-xs text-warning-text">
           Production: the workflow excludes @payment, @slow and @destructive, and destructive specs refuse production regardless.

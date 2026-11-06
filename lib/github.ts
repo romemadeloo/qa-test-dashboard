@@ -8,6 +8,8 @@ export type RunRequest = {
   suite: string;
   browserProject: string;
   customGrep?: string | null;
+  // manual-playwright.yml's workers input; schedules leave it to the workflow's default.
+  workers?: string;
   trigger: 'manual' | 'schedule';
   scheduleId?: string | null;
 };
@@ -61,6 +63,7 @@ export async function dispatchRun(supabase: SupabaseClient, request: RunRequest)
         suite: request.suite,
         browser_project: request.browserProject,
         custom_grep: request.customGrep ?? '',
+        workers: request.workers ?? 'auto',
         dashboard_run_id: execution.id
       }
     }),

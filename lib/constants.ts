@@ -16,6 +16,9 @@ export const BROWSER_PROJECTS = [
   'all-desktop'
 ] as const;
 
+// manual-playwright.yml's workers input. auto: 1 on production (its WAF counts requests per IP), 2 elsewhere.
+export const WORKER_OPTIONS = ['auto', '1', '2', '3', '4'] as const;
+
 export const CASE_STATUSES = ['active', 'quarantined', 'retired'] as const;
 
 export const CRON_PRESETS = [

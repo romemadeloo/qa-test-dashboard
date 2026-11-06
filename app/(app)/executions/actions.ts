@@ -2,7 +2,7 @@
 
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES } from '@/lib/constants';
+import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES, WORKER_OPTIONS } from '@/lib/constants';
 import { dispatchRun } from '@/lib/github';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
@@ -29,6 +29,7 @@ export async function startRun(_prev: StartRunState, formData: FormData): Promis
       suite: pick(SUITES, formData.get('suite')),
       browserProject: pick(BROWSER_PROJECTS, formData.get('browser_project')),
       customGrep: String(formData.get('custom_grep') ?? '').trim() || null,
+      workers: pick(WORKER_OPTIONS, formData.get('workers') ?? 'auto'),
       trigger: 'manual'
     });
   } catch (error) {

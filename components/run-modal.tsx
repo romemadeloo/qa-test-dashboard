@@ -58,7 +58,7 @@ function RunDialog({ target, environment, onClose }: { target: RunTarget; enviro
         )}
         <FormError message={state.error} />
         <div className="grid gap-4 sm:grid-cols-2">
-          <RunFields idPrefix="modal-" tags={target.tags} defaults={{ environment: environment ?? target.defaultEnvironment, browser_project: target.defaultBrowser }} />
+          <RunFields idPrefix="modal-" showWorkers tags={target.tags} defaults={{ environment: environment ?? target.defaultEnvironment, browser_project: target.defaultBrowser }} />
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <button type="button" className="btn" onClick={onClose}>
