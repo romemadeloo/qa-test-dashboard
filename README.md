@@ -80,15 +80,11 @@ Flaky (passed on retry) counts as *not passed* in pass rates, matching `failOnFl
    | `NEXT_PUBLIC_SITE_URL` | The deployment URL |
 
 3. Deploy. `vercel.json` pins the Next.js framework and runs `/api/cron/scheduler` once a day (00:00 KST), the most the
-   Hobby plan allows. The 15-minute scheduler resolution comes from Supabase pg_cron (see step 1). Vercel's daily cron
-   and `.github/workflows/dashboard-scheduler.yml` call the same route as backups; GitHub alone is not enough, since it
-   delayed its `*/15` schedule by 5 to 7 hours at a time (2026-11-02 to 04). The route starts each occurrence once,
-   however many callers reach it.
+   Hobby plan allows. The 15-minute scheduler resolution comes from Supabase pg_cron (see step 1); Vercel's daily cron
+   is the backup. The route starts each occurrence once, however many callers reach it. (A GitHub Actions `*/15` tick
+   was tried and removed on 2026-11-09: GitHub delayed it by 5 to 7 hours at a time.)
 
 ### 3. GitHub Actions
-
-**This repository** (the backup scheduler tick in `.github/workflows/dashboard-scheduler.yml`): add secrets `DASHBOARD_URL`
-(the Vercel URL) and `DASHBOARD_CRON_SECRET` (the deployment's `CRON_SECRET`).
 
 **The test repo**: add secrets `DASHBOARD_URL` and `DASHBOARD_INGEST_TOKEN`. Its `manual-playwright.yml` already passes
 them, plus `dashboard_run_id` and `DASHBOARD_SUITE`. To have the other workflows report too, add the same two `env`

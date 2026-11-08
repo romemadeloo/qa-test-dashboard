@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import type { Schedule, Settings } from '@/lib/types';
 
 // Supabase pg_cron calls this every 15 minutes with `Authorization: Bearer $CRON_SECRET`; Vercel Cron (daily,
-// vercel.json) and the GitHub tick (dashboard-scheduler.yml) call it too, as backups.
+// vercel.json) calls it too, as a backup.
 // It dispatches every due schedule, marks runs stuck in queued/running as interrupted, and applies
 // each project's retention.
 export const maxDuration = 60;
