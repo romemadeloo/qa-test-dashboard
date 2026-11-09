@@ -3,9 +3,11 @@
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { BROWSER_PROJECTS, ENVIRONMENT_KEYS, SUITES, WORKER_OPTIONS } from '@/lib/constants';
+import { fetchExecutionsPage, type ExecutionFilters } from '@/lib/executions';
 import { dispatchRun } from '@/lib/github';
 import { getCurrentProject } from '@/lib/project';
 import { createClient } from '@/lib/supabase/server';
+import type { Execution } from '@/lib/types';
 
 function pick<T extends readonly string[]>(allowed: T, value: FormDataEntryValue | null): T[number] {
   const v = String(value ?? '');
@@ -38,6 +40,14 @@ export async function startRun(_prev: StartRunState, formData: FormData): Promis
 
   revalidatePath('/executions');
   redirect(`/executions/${executionId}?dispatched=1`);
+}
+
+// The next batch for the Executions list as it is scrolled; reads as the signed-in user, so RLS applies.
+export async function loadExecutionsPage(filters: ExecutionFilters, page: number): Promise<Execution[]> {
+  const { project } = await getCurrentProject();
+  const supabase = await createClient();
+  const { executions } = await fetchExecutionsPage(supabase, project.id, filters, page);
+  return executions;
 }
 
 // Only marks the dashboard row; a run already picked up by GitHub must be cancelled there.
