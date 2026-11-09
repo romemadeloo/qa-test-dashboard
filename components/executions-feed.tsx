@@ -8,8 +8,9 @@ import type { Execution } from '@/lib/types';
 
 type Filters = { env: string; status: string; trigger: string };
 
-// The Executions list: the server renders the first batch, and each time the bottom of the list
-// scrolls into view the next batch is fetched and appended, until all `total` runs are shown.
+// The Executions list: a fixed-height box under the filters (the page itself does not scroll) whose
+// rows scroll beneath a pinned header. The server renders the first batch; each time the bottom of
+// the box comes into view the next batch is fetched and appended, until all `total` runs are shown.
 // Keyed by its filters by the page, so changing a filter starts over from the first batch.
 export function ExecutionsFeed({ initial, total, filters }: { initial: Execution[]; total: number; filters: Filters }) {
   const [rows, setRows] = useState(initial);
@@ -17,6 +18,7 @@ export function ExecutionsFeed({ initial, total, filters }: { initial: Execution
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const sentinel = useRef<HTMLDivElement>(null);
+  const scroller = useRef<HTMLDivElement>(null);
   const done = rows.length >= total;
 
   const loadMore = useCallback(async () => {
@@ -42,14 +44,18 @@ export function ExecutionsFeed({ initial, total, filters }: { initial: Execution
   useEffect(() => {
     const node = sentinel.current;
     if (!node || done || error) return;
-    const observer = new IntersectionObserver((entries) => entries[0]?.isIntersecting && loadMore(), { rootMargin: '240px' });
+    const observer = new IntersectionObserver((entries) => entries[0]?.isIntersecting && loadMore(), {
+      root: scroller.current,
+      rootMargin: '240px'
+    });
     observer.observe(node);
     return () => observer.disconnect();
   }, [loadMore, done, error]);
 
   return (
-    <>
-      <ExecutionsTable executions={rows} />
+    // 340px: app header, page header, filter bar and the page's bottom padding.
+    <div ref={scroller} className="h-[calc(100dvh-340px)] min-h-[320px] overflow-auto px-2">
+      <ExecutionsTable executions={rows} scrolling />
       <div ref={sentinel} className="flex items-center justify-center gap-2 py-4 text-xs text-[var(--muted)]" aria-live="polite">
         {loading && (
           <>
@@ -63,6 +69,6 @@ export function ExecutionsFeed({ initial, total, filters }: { initial: Execution
         )}
         {!loading && !error && done && rows.length > 0 && <>All {total} runs shown</>}
       </div>
-    </>
+    </div>
   );
 }
