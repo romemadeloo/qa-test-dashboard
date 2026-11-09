@@ -1,16 +1,18 @@
 import 'server-only';
+import { cache } from 'react';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { PROJECT_COOKIE } from './constants';
 import { createClient } from './supabase/server';
 import type { Project } from './types';
 
-// Every page is scoped to one project, picked in the sidebar and remembered in a cookie.
-export async function getProjects(): Promise<Project[]> {
+// Every page is scoped to one project, picked in the sidebar and remembered in a cookie. Once per
+// request: the layout and the page both ask.
+export const getProjects = cache(async (): Promise<Project[]> => {
   const supabase = await createClient();
   const { data } = await supabase.from('projects').select('*').order('name');
   return (data ?? []) as Project[];
-}
+});
 
 export async function getCurrentProject(): Promise<{ project: Project; projects: Project[] }> {
   const projects = await getProjects();
